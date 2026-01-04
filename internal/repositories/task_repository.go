@@ -9,11 +9,11 @@ import (
 )
 
 type TaskRepository interface {
-	CreateTask(ctx context.Context, task *models.Task) error // Добавьте ctx
-	UpdateTask()
+	CreateTask(ctx context.Context, task *models.Task) error
 	DeleteTask(ctx context.Context, taskID int) error
 	GetAllTasks(ctx context.Context) ([]*models.Task, error)
-	GetTaskByID(ctx context.Context, taskID int) (*models.Task, error)
+	// GetTaskByID(ctx context.Context, taskID int) (*models.Task, error)
+	DoneTask(ctx context.Context, taskID int) error
 }
 
 type taskRepository struct {
@@ -117,4 +117,16 @@ func (r *taskRepository) GetTaskByID(ctx context.Context, taskID int) (*models.T
 	}
 
 	return task, nil
+}
+
+func (r *taskRepository) DoneTask(ctx context.Context, taskID int) error {
+	query := `
+		UPDATE tasks
+		SET completed=true
+		WHERE tasks.id = $1;
+	`
+
+	_, err := r.db.Exec(ctx, query, taskID)
+
+	return err
 }
