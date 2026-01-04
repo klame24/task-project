@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  application:
+    build: .
+    container_name: application-container
+    ports:
+      - "5050:5050"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=root
+      - DB_NAME=postgres
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+  
+  db:
+    image: postgres:18.1-bookworm
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: root
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432"
+    # ИЗМЕНЕНИЕ: изменили точку монтирования
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - migrations/000001_create_tasks_table.up.sql:/docker-entrypoint-initdb.d/init.sql 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
